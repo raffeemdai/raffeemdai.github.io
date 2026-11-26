@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced RAG Learning Portal | LangChain + Docling + Qdrant</title>
+<style>
+:root{
+ --bg:#f5f7fb;--panel:#fff;--ink:#182338;--muted:#66748a;--line:#e4e9f1;
+ --nav:#14243a;--nav2:#1c3554;--blue:#2563eb;--blue2:#eaf1ff;--teal:#0f766e;
+ --green:#15803d;--greenbg:#eaf8ef;--amber:#a16207;--amberbg:#fff7df;
+ --red:#b42318;--redbg:#fff0ee;--purple:#7046b8;--purplebg:#f3edff;
+ --shadow:0 8px 28px rgba(23,42,69,.07);--radius:15px;
+}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input{font:inherit}button{cursor:pointer}
+.app{min-height:100vh}.sidebar{position:fixed;inset:0 auto 0 0;width:278px;background:var(--nav);color:#e8eef7;padding:22px 15px;overflow:auto;z-index:10}
+.brand{display:flex;gap:11px;align-items:center;padding:4px 8px 22px;border-bottom:1px solid #31445e}
+.brandmark{width:39px;height:39px;border-radius:12px;background:linear-gradient(135deg,#60a5fa,#2dd4bf);display:grid;place-items:center;color:#10243b;font-weight:900;font-size:19px}
+.brand b{display:block;font-size:15px;letter-spacing:.2px}.brand small{color:#aebbd0;font-size:11px}
+.side-label{font-size:10px;text-transform:uppercase;letter-spacing:1.3px;color:#8ea1bc;margin:22px 9px 8px;font-weight:800}
+.nav-item{width:100%;border:0;background:transparent;color:#cbd6e5;text-align:left;padding:9px 10px;border-radius:9px;display:flex;gap:10px;align-items:center;font-size:13px;margin:2px 0}
+.nav-item:hover,.nav-item.active{background:#263f5e;color:white}.nav-item .num{font-size:10px;color:#8fa7c5;width:19px}
+.sidebar-foot{margin:24px 8px;padding:12px;border:1px solid #344a65;border-radius:12px;color:#b7c6d9;font-size:11px}
+.main{margin-left:278px;min-height:100vh}.topbar{height:65px;background:rgba(255,255,255,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 34px;position:sticky;top:0;z-index:8}
+.crumb{color:var(--muted);font-size:12px}.top-actions{display:flex;gap:10px;align-items:center}
+.search{width:min(340px,35vw);position:relative}.search input{width:100%;border:1px solid var(--line);background:#f8faff;border-radius:10px;padding:9px 12px 9px 35px;outline:none;font-size:12px}.search input:focus{border-color:#8bb2ff;background:white}.search span{position:absolute;left:12px;top:6px;color:#8090a7}
+.progress-mini{font-size:11px;color:var(--muted);white-space:nowrap}.progress-mini b{color:var(--blue)}
+.content{max-width:1190px;margin:auto;padding:32px 34px 70px}
+.hero{background:linear-gradient(115deg,#132c49,#1e4771 60%,#167d83);color:white;border-radius:20px;padding:30px 32px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;width:300px;height:300px;border:1px solid #ffffff22;border-radius:50%;right:-70px;top:-140px;box-shadow:0 0 0 35px #ffffff0c,0 0 0 70px #ffffff08}
+.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:1.6px;color:#a8d7e8;font-weight:800}
+.hero h1{font-size:clamp(25px,3vw,36px);line-height:1.18;margin:10px 0 12px;max-width:700px}.hero p{max-width:720px;color:#d6e4f3;margin:0 0 19px;font-size:14px}
+.hero-tags{display:flex;gap:8px;flex-wrap:wrap}.tag{font-size:10px;padding:5px 9px;border-radius:20px;background:#ffffff18;border:1px solid #ffffff2c;color:#e9f5ff}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin:18px 0 28px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px 16px;box-shadow:0 3px 12px #1a36500a}.stat small{color:var(--muted);font-size:11px}.stat strong{display:block;font-size:22px;margin-top:2px}.stat em{font-style:normal;color:var(--teal);font-size:10px}
+.section{display:none;animation:fade .2s ease}.section.active{display:block}@keyframes fade{from{opacity:.5;transform:translateY(4px)}to{opacity:1;transform:none}}
+.section-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin:10px 0 20px}.section-head h2{font-size:25px;line-height:1.25;margin:3px 0 7px}.section-head p{margin:0;color:var(--muted);max-width:760px;font-size:13px}
+.kicker{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--blue);font-weight:850}
+.complete-btn{border:1px solid #c9d8ee;background:white;color:#31567f;padding:8px 12px;border-radius:9px;font-size:11px;white-space:nowrap}.complete-btn.done{background:var(--greenbg);border-color:#b8e2c4;color:var(--green)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:15px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:0 3px 15px #1b35500a;margin-bottom:14px}
+.card h3{font-size:15px;margin:0 0 9px}.card h4{font-size:13px;margin:13px 0 6px}.card p{margin:6px 0;color:#45546a;font-size:13px}.muted{color:var(--muted)!important}
+.pill{display:inline-block;border-radius:20px;padding:3px 8px;font-size:9px;font-weight:800;letter-spacing:.2px;background:var(--blue2);color:var(--blue);margin:0 4px 5px 0}.pill.green{background:var(--greenbg);color:var(--green)}.pill.amber{background:var(--amberbg);color:var(--amber)}.pill.red{background:var(--redbg);color:var(--red)}.pill.purple{background:var(--purplebg);color:var(--purple)}
+.callout{border-left:3px solid var(--blue);background:#f1f6ff;padding:12px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:12px;color:#344d70}.callout.warn{border-color:#e3a008;background:var(--amberbg);color:#76510a}.callout.good{border-color:#21a05b;background:var(--greenbg);color:#245b3a}.callout.purple{border-color:#9873d8;background:var(--purplebg);color:#553d82}
+.story{background:linear-gradient(120deg,#f1f7ff,#f6f4ff);border:1px solid #dce6f7;border-radius:13px;padding:15px;margin:12px 0}.story b{color:#294c7d}.story p{margin:5px 0;color:#42536b;font-size:13px}
+.flow{display:flex;align-items:stretch;gap:7px;flex-wrap:wrap;margin:14px 0}.flow .step{flex:1;min-width:105px;background:#f6f9fe;border:1px solid #dce6f4;border-radius:10px;padding:10px;text-align:center;font-size:11px;color:#334b6b}.flow .step b{display:block;color:#1d3d65;font-size:12px}.arrow{align-self:center;color:#7d91ad;font-weight:900}
+.diagram{background:#101f33;color:#e2edf9;border-radius:13px;padding:17px;overflow:auto;margin:12px 0}.diagram pre{margin:0;font:12px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre;min-width:max-content}.diagram .caption{font:10px/1.4 system-ui;color:#9db4ce;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:12px;margin:10px 0}th{text-align:left;background:#f1f5fb;color:#40516a;font-weight:800}td,th{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}td{color:#47566b}
+details{border:1px solid var(--line);border-radius:11px;margin:9px 0;background:#fff}summary{cursor:pointer;list-style:none;padding:12px 14px;font-weight:750;font-size:12px;color:#263d5b;display:flex;justify-content:space-between}summary:after{content:"＋";color:var(--blue);font-size:15px}details[open] summary:after{content:"−"}details .detail-body{padding:0 14px 13px;color:#4c5c70;font-size:12px}
+.codebox{background:#101b2a;border-radius:12px;overflow:hidden;margin:12px 0;color:#dce8f7}.codehead{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#1b2a3e;color:#aebed2;font-size:10px}.copy{border:1px solid #53667e;background:#263b55;color:#e7f1fc;border-radius:6px;padding:4px 9px;font-size:10px}.codebox pre{margin:0;padding:14px;overflow:auto;font:11.5px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre;color:#d9e8fa}.codebox code{font:inherit}.output{background:#f5f8fc;border:1px solid var(--line);padding:10px 12px;border-radius:9px;font:11px/1.6 ui-monospace,monospace;color:#40516a;white-space:pre-wrap}
+.tabs{display:flex;gap:5px;border-bottom:1px solid var(--line);margin:10px 0}.tab{border:0;background:transparent;padding:8px 11px;font-size:11px;color:var(--muted);border-bottom:2px solid transparent}.tab.active{color:var(--blue);border-color:var(--blue);font-weight:800}.tabpane{display:none}.tabpane.active{display:block}
+.question{padding:12px 0;border-bottom:1px solid var(--line)}.question:last-child{border:0}.question b{font-size:12px}.reveal{border:0;background:var(--blue2);color:var(--blue);padding:6px 9px;border-radius:7px;font-size:10px;margin-top:7px}.answer{display:none;background:#f3f8ff;border-radius:8px;padding:9px 11px;margin-top:7px;font-size:11px;color:#40516a}.answer.show{display:block}
+.quiz-option{display:block;border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin:6px 0;font-size:12px;cursor:pointer}.quiz-option:hover{border-color:#8eb2f5;background:#f8faff}.quiz-option.correct{border-color:#7bc795;background:var(--greenbg)}.quiz-option.wrong{border-color:#efa49b;background:var(--redbg)}
+.quiz-feedback{font-size:11px;margin-top:8px;color:var(--muted);min-height:20px}
+.search-results{display:none;position:absolute;right:0;top:43px;width:min(430px,80vw);max-height:360px;overflow:auto;background:white;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);z-index:30;padding:7px}.result{display:block;width:100%;text-align:left;border:0;background:white;padding:9px;border-radius:8px;font-size:12px;color:var(--ink)}.result:hover{background:#f0f5ff}.result small{display:block;color:var(--muted)}
+.checklist label{display:flex;gap:9px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12px;color:#46556b}.checklist input{accent-color:var(--blue)}
+.footer{margin-top:30px;border-top:1px solid var(--line);padding-top:16px;color:#8592a5;font-size:10px}
+.mobile-menu{display:none;border:0;background:white;font-size:20px}
+@media(max-width:1000px){.sidebar{width:245px}.main{margin-left:245px}.content{padding:25px 22px}.topbar{padding:0 22px}.grid3{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){.sidebar{transform:translateX(-100%);transition:.2s;width:280px}.sidebar.open{transform:translateX(0)}.main{margin-left:0}.mobile-menu{display:block}.topbar{padding:0 13px}.crumb{display:none}.search{width:min(240px,48vw)}.content{padding:18px 13px 50px}.hero{padding:23px 20px}.stats{grid-template-columns:1fr 1fr}.grid2,.grid3{grid-template-columns:1fr}.section-head{display:block}.complete-btn{margin-top:12px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar" id="sidebar">
+ <div class="brand"><div class="brandmark">R</div><div><b>RAG Study Portal</b><small>LangChain · Docling · Qdrant</small></div></div>
+ <div class="side-label">Start here</div>
+ <button class="nav-item active" data-target="overview"><span class="num">00</span> Dashboard overview</button>
+ <div class="side-label">Learning chapters</div>
+ <button class="nav-item" data-target="foundations"><span class="num">01</span> RAG & document ingestion</button>
+ <button class="nav-item" data-target="loader"><span class="num">02</span> LangChain DoclingLoader</button>
+ <button class="nav-item" data-target="elements"><span class="num">03</span> PDF elements cookbook</button>
+ <button class="nav-item" data-target="chunking"><span class="num">04</span> Chunking & metadata</button>
+ <button class="nav-item" data-target="embeddings"><span class="num">05</span> Embeddings & Qdrant</button>
+ <button class="nav-item" data-target="retrieval"><span class="num">06</span> Retrieval fundamentals</button>
+ <button class="nav-item" data-target="advanced"><span class="num">07</span> Advanced retrievers</button>
+ <button class="nav-item" data-target="reranking"><span class="num">08</span> Reranking & compression</button>
+ <button class="nav-item" data-target="architecture"><span class="num">09</span> Enterprise RAG architecture</button>
+ <button class="nav-item" data-target="interview"><span class="num">10</span> Interview preparation</button>
+ <button class="nav-item" data-target="quiz"><span class="num">11</span> Knowledge check</button>
+ <button class="nav-item" data-target="revision"><span class="num">12</span> Revision & practice plan</button>
+ <div class="sidebar-foot">Primary sources: your two uploaded Docling + LangChain + Qdrant Markdown guides. Source gaps are labelled explicitly.</div>
+</aside>
+<main class="main">
+ <header class="topbar">
+  <div style="display:flex;align-items:center;gap:12px"><button class="mobile-menu" id="menuBtn">☰</button><span class="crumb">LEARNING WORKSPACE / <b id="crumbName">OVERVIEW</b></span></div>
+  <div class="top-actions">
+   <div class="search"><span>⌕</span><input id="searchInput" placeholder="Search concepts, code, topics…" autocomplete="off"><div class="search-results" id="searchResults"></div></div>
+   <div class="progress-mini">Progress <b id="progressText">0%</b></div>
+  </div>
+ </header>
+ <div class="content">
+  <section class="section active" id="overview">
+   <div class="hero">
+    <div class="eyebrow">Your personal technical learning workspace</div>
+    <h1>Advanced RAG, LangChain<br> & Docling — from concepts to production</h1>
+    <p>Learn how to ingest complex enterprise documents, preserve their structure, create meaningful chunks, index them in Qdrant and retrieve grounded context for an LLM. Study, run examples, test yourself and prepare interview explanations.</p>
+    <div class="hero-tags"><span class="tag">Beginner → Advanced</span><span class="tag">LangChain-first Python</span><span class="tag">Enterprise RAG</span><span class="tag">Interview practice</span></div>
+   </div>
+   <div class="stats">
+    <div class="stat"><small>Learning chapters</small><strong>13</strong><em>Structured path</em></div>
+    <div class="stat"><small>Core code labs</small><strong>8+</strong><em>LangChain focused</em></div>
+    <div class="stat"><small>Review questions</small><strong>20+</strong><em>Reveal answers</em></div>
+    <div class="stat"><small>Your completion</small><strong id="statProgress">0%</strong><em>Saved in this browser session</em></div>
+   </div>
+   <div class="grid2">
+    <div class="card"><span class="pill green">RECOMMENDED PATH</span><h3>Learn in this order</h3><div class="flow" style="display:block"><div class="step" style="text-align:left;margin-bottom:6px"><b>01 · Understand ingestion</b>Why document structure matters</div><div class="step" style="text-align:left;margin-bottom:6px"><b>02 · Load with DoclingLoader</b>Markdown and document chunks</div><div class="step" style="text-align:left;margin-bottom:6px"><b>03 · Prepare retrieval data</b>Chunking, metadata and embeddings</div><div class="step" style="text-align:left;margin-bottom:6px"><b>04 · Index and retrieve</b>Qdrant, retrievers and evaluation</div><div class="step" style="text-align:left"><b>05 · Production thinking</b>Reranking, compression and traceability</div></div></div>
+    <div class="card"><span class="pill amber">SOURCE ACCURACY</span><h3>How to read this portal</h3><p><span class="pill green">From your files</span> Content directly supported by the uploaded guides.</p><p><span class="pill purple">Learning explanation</span> Plain-English interpretation to help you understand a source concept.</p><p><span class="pill red">Source gap</span> Topic is named in your request but the uploaded files do not provide a full explanation or runnable implementation.</p><div class="callout warn">No standalone Docling Core tutorials are included. The code focuses on LangChain integrations. Where a PDF element needs additional visual processing, the portal explains the boundary instead of inventing a LangChain-only API.</div></div>
+   </div>
+   <div class="card"><h3>Start with the big picture</h3><div class="diagram"><pre>ENTERPRISE DOCUMENTS
+       │
+       ▼
+LangChain DoclingLoader
+       │
+       ▼
+Structured Markdown / document chunks
+       │
+       ▼
+Chunk validation + metadata
+       │
+       ▼
+Embedding model ───────► Vector representation
+       │
+       ▼
+Qdrant vector store
+       │
+       ▼
+Retriever ─► (Rerank / Compress, if configured)
+       │
+       ▼
+LLM + retrieved evidence
+       │
+       ▼
+Grounded response + source references</pre><div class="caption">Conceptual learning map. Optional stages depend on the application design.</div></div></div>
+   <div class="card"><h3>Continue learning</h3><p class="muted">Choose a chapter from the sidebar or search for a term such as “DOC_CHUNKS”, “OCR”, “Qdrant”, or “Parent Document Retriever”. Mark chapters complete as you study.</p><button class="complete-btn" onclick="go('foundations')">Start Chapter 01 →</button></div>
+  </section>
+
+  <section class="section" id="foundations">
+   <div class="section-head"><div><div class="kicker">Chapter 01 · Beginner</div><h2>RAG foundations & document ingestion</h2><p>Understand why the quality of document ingestion affects every downstream RAG stage.</p></div><button class="complete-btn" data-complete="foundations">Mark studied ✓</button></div>
+   <div class="grid2">
+    <div class="card"><h3>What is RAG?</h3><p>Retrieval-Augmented Generation combines a retrieval step with an LLM response. Instead of asking the model to answer only from its internal knowledge, the application retrieves relevant source passages and provides them as context.</p><h4>Why do we need it?</h4><p>Enterprise knowledge is stored in changing documents, policies, manuals, reports and technical material. Retrieval gives the model access to relevant organization-specific evidence at question time.</p><h4>What problem does ingestion solve?</h4><p>Before content can be retrieved, the system must extract it, organize it into useful units, represent those units as vectors and store them with traceable metadata.</p></div>
+    <div class="card"><h3>Story: enterprise policy assistant</h3><div class="story"><b>Scenario</b><p>An employee asks: “What is the travel reimbursement limit for international trips?” The answer is in a 90-page policy PDF with headings, tables and footnotes.</p><p><b>Without good ingestion:</b> the table may become disconnected values, and the answer may miss the currency or policy section.</p><p><b>With structured ingestion:</b> the loader preserves readable content and structure; chunks retain context; retrieval can find the relevant policy evidence.</p></div><span class="pill green">Real-world fit</span><p>Enterprise search, HR policy assistants, customer support knowledge bases, compliance and technical documentation.</p></div>
+   </div>
+   <div class="card"><h3>Traditional extraction vs. structure-aware ingestion</h3><table><tr><th>Traditional text extraction</th><th>DoclingLoader-based workflow</th></tr><tr><td>Often focuses on extracted text.</td><td>Uses Docling's document understanding through a LangChain loader.</td></tr><tr><td>Tables may lose row/column relationships.</td><td>Markdown export can preserve table structure when recognized correctly.</td></tr><tr><td>Headings and reading order may be lost.</td><td>Markdown hierarchy and layout-aware conversion can preserve more context.</td></tr><tr><td>Chunk quality depends heavily on later splitting.</td><td>Can use document-aware chunks with `DOC_CHUNKS`.</td></tr></table><div class="callout">The source guide compares `PyPDFLoader` and `DoclingLoader`. The practical difference is not simply the final object type: both can produce LangChain Documents; the content extraction process differs.</div></div>
+   <div class="card"><h3>End-to-end workflow</h3><div class="flow"><div class="step"><b>Source</b>PDF / DOCX / PPTX</div><div class="arrow">→</div><div class="step"><b>Load</b>DoclingLoader</div><div class="arrow">→</div><div class="step"><b>Organize</b>Markdown / chunks</div><div class="arrow">→</div><div class="step"><b>Vectorize</b>Embeddings</div><div class="arrow">→</div><div class="step"><b>Search</b>Qdrant</div></div></div>
+   <div class="card"><h3>Check your understanding</h3><div class="question"><b>Why can a poor PDF extraction result in a poor RAG answer?</b><button class="reveal" onclick="reveal(this)">Reveal answer</button><div class="answer">Because retrieval can only find and rank the content that was extracted and indexed. If table relationships, headings or reading order were lost during ingestion, later retrieval may not reconstruct them.</div></div></div>
+  </section>
+
+  <section class="section" id="loader">
+   <div class="section-head"><div><div class="kicker">Chapter 02 · Beginner to intermediate</div><h2>LangChain DoclingLoader</h2><p>Use the LangChain integration as the entry point for loading supported document formats.</p></div><button class="complete-btn" data-complete="loader">Mark studied ✓</button></div>
+   <div class="card"><h3>What is DoclingLoader?</h3><p>`DoclingLoader` is the LangChain integration used in your cookbook. It converts a source document through Docling's document-understanding pipeline and exposes the result as LangChain `Document` objects with `page_content` and `metadata`.</p><div class="callout good">Scope choice: examples here use `DoclingLoader`. Standalone `DocumentConverter` / Docling Core code is intentionally not included.</div><h4>Why use it?</h4><p>It connects document-aware extraction to a familiar LangChain workflow, so the returned documents can be passed into splitting, embedding, vector storage and retrieval components.</p></div>
+   <div class="grid2"><div class="card"><h3>Export type: MARKDOWN</h3><p>Returns the converted input as a Markdown representation. The cookbook describes one LangChain Document for the converted input document. Use it to inspect the whole structure or apply heading-based splitting.</p><span class="pill">Inspect / transform</span></div><div class="card"><h3>Export type: DOC_CHUNKS</h3><p>Returns multiple LangChain Documents using document-aware chunking. Your guide identifies `HybridChunker` as the default chunking approach.</p><span class="pill green">RAG starting point</span></div></div>
+   <div class="tabs"><button class="tab active" data-tab="load-code">Code</button><button class="tab" data-tab="load-output">Expected output</button><button class="tab" data-tab="load-notes">Line-by-line notes</button></div>
+   <div class="tabpane active" id="load-code"><div class="codebox"><div class="codehead">Python · MARKDOWN loader <button class="copy" onclick="copyCode(this)">Copy code</button></div><pre><code>from langchain_docling import DoclingLoader
+from langchain_docling.loader import ExportType
+
+PDF_PATH = "data/annual_report.pdf"
+
+loader = DoclingLoader(
+    file_path=PDF_PATH,
+    export_type=ExportType.MARKDOWN,
+)
+
+docs = loader.load()
+
+print("Documents:", len(docs))
+print("Type:", type(docs[0]))
+print(docs[0].page_content[:2000])
+print("Metadata:", docs[0].metadata)</code></pre></div></div>
+   <div class="tabpane" id="load-output"><div class="output">Documents: 1
+Type: &lt;class 'langchain_core.documents.base.Document'&gt;
+# Annual Report
+## Financial Results
+...
+Metadata: {'source': 'data/annual_report.pdf', ...}</div><p class="muted">Illustrative shape only. Exact content and metadata keys depend on the input document and installed package version.</p></div>
+   <div class="tabpane" id="load-notes"><ul><li>`DoclingLoader` imports the LangChain integration.</li><li>`ExportType.MARKDOWN` selects Markdown export.</li><li>`load()` executes conversion and returns a list of LangChain Documents.</li><li>`page_content` contains extracted Markdown/text; `metadata` carries source/provenance details.</li></ul></div>
+   <div class="card"><h3>DOC_CHUNKS example</h3><div class="codebox"><div class="codehead">Python · document-aware chunks <button class="copy" onclick="copyCode(this)">Copy code</button></div><pre><code>from langchain_docling import DoclingLoader
+from langchain_docling.loader import ExportType
+
+loader = DoclingLoader(
+    file_path="data/annual_report.pdf",
+    export_type=ExportType.DOC_CHUNKS,
+)
+
+chunks = loader.load()
+
+for index, chunk in enumerate(chunks[:5], start=1):
+    print(f"--- CHUNK {index} ---")
+    print(chunk.page_content)
+    print("Metadata:", chunk.metadata)</code></pre></div><p><b>Expected output:</b> multiple LangChain Documents. Each item has text in `page_content` and provenance/context in `metadata`. Inspect actual metadata keys rather than assuming a fixed schema.</p></div>
+   <div class="card"><h3>Supported document types in your guide</h3><div class="grid3"><div><span class="pill green">Document</span><p>PDF, DOCX, PPTX</p></div><div><span class="pill green">Web/text</span><p>HTML, TXT, Markdown</p></div><div><span class="pill green">Visual</span><p>Images and scanned documents (OCR pipeline)</p></div></div><div class="callout warn">The source calls Docling a document-centric or “universal document” loader, not a universal data loader. For CSV, Excel, SQL, APIs, audio and video, it recommends specialized loaders/pipelines.</div></div>
+   <div class="card"><h3>Interview-ready explanation</h3><p>“I use LangChain's `DoclingLoader` to ingest complex enterprise documents. It uses Docling's document-understanding capabilities internally and returns standard LangChain Documents. I choose Markdown export when I need to inspect or split the complete structured content, and document chunks when I want structure-aware chunks as a starting point for RAG. I then inspect the metadata and validate extraction quality before embedding.”</p></div>
+  </section>
+
+  <section class="section" id="elements">
+   <div class="section-head"><div><div class="kicker">Chapter 03 · Practical cookbook</div><h2>PDF elements: LangChain-first cookbook</h2><p>Each element needs a different validation strategy. Use the LangChain loader wherever the uploaded cookbook supports it.</p></div><button class="complete-btn" data-complete="elements">Mark studied ✓</button></div>
+   <div class="callout warn">Important boundary: the source cookbook uses Docling Core APIs for low-level table objects, picture export and OCR converter configuration. Those code paths are omitted here as requested. The examples below show the LangChain side and clearly mark where a separate visual/OCR stage is needed.</div>
+   <details open><summary>1. Normal PDF text</summary><div class="detail-body"><p><b>What happens:</b> `DoclingLoader` converts document text into Markdown or chunks. Validate paragraphs, symbols, hyphenated words, bullets, footnotes and page breaks.</p><div class="codebox"><div class="codehead">Python · LangChain loader <button class="copy" onclick="copyCode(this)">Copy code</button></div><pre><code>from langchain_docling import DoclingLoader
+from langchain_docling.loader import ExportType
+
+docs = DoclingLoader(
+    file_path="data/report.pdf",
+    export_type=ExportType.MARKDOWN,
+).load()
+
+full_text = docs[0].page_content
+print(full_text[:2000])</code></pre></div><p><b>Expected:</b> a Markdown/text representation in the first LangChain Document. For RAG, use `DOC_CHUNKS` or split at meaningful headings rather than embedding a large report as one vector.</p></div></details>
+   <details><summary>2. Headings and hierarchy</summary><div class="detail-body"><p><b>What happens:</b> recognized headings appear as Markdown heading markers. LangChain's `MarkdownHeaderTextSplitter` can preserve heading values in section metadata.</p><div class="codebox"><div class="codehead">Python · heading-aware split <button class="copy" onclick="copyCode(this)">Copy code</button></div><pre><code>from langchain_docling import DoclingLoader
+from langchain_docling.loader import ExportType
+from langchain_text_splitters import MarkdownHeaderTextSplitter
+
+markdown_doc = DoclingLoader(
+    file_path="data/report.pdf",
+    export_type=ExportType.MARKDOWN,
+).load()[0]
+
+headers = [
+    ("#", "heading_1"),
+    ("##", "heading_2"),
+    ("###", "heading_3"),
+]
+
+splitter = MarkdownHeaderTextSplitter(
+    headers_to_split_on=headers,
+    strip_headers=False,
+)
+sections = splitter.split_text(markdown_doc.page_content)
+
+for section in sections[:5]:
+    print(section.metadata)
+    print(section.page_content[:300])</code></pre></div><p><b>Validate:</b> heading level and section context. A bold sentence in the PDF is not automatically a section heading.</p></div></details>
+   <details><summary>3. Tables</summary><div class="detail-body"><p><b>LangChain route:</b> Markdown export may represent recognized tables using Markdown table syntax. That content can be indexed as part of the LangChain Document.</p><div class="codebox"><div class="codehead">Python · inspect Markdown tables <button class="copy" onclick="copyCode(this)">Copy code</button></div><pre><code>from langchain_docling import DoclingLoader
+from langchain_docling.loader import ExportType
+
+doc = DoclingLoader(
+    file_path="data/annual_report.pdf",
+    export_type=ExportType.MARKDOWN,
+).load()[0]
+
+for line in doc.page_content.splitlines():
+    if "|" in line:
+        print(line)</code></pre></div><p><b>Why keep headers?</b> The value `10000` is ambiguous without the column label, unit and row label. Preserve headers and row relationships.</p><div class="callout warn">The cookbook's DataFrame/CSV extraction uses Docling Core `TableItem` access. No LangChain-only table-object extraction API is shown in your source files, so this portal does not invent one.</div></div></details>
+   <details><summary>4. Images and diagrams</summary><div class="detail-body"><p><b>What is searchable?</b> The loader's text output does not guarantee that the meaning of every picture is searchable. The cookbook exports picture assets, then uses a vision-language model (VLM) or human review to create a verified caption.</p><p><b>LangChain representation after captioning:</b></p><div class="codebox"><div class="codehead">Python · store a verified caption <button class="copy" onclick="copyCode(this)">Copy code</button></div><pre><code>from langchain_core.documents import Document
+
+verified_caption = (
+    "Architecture diagram showing the ingestion service, "
+    "queue, processing workers and vector database."
+)
+
+image_doc = Document(
+    page_content=f"Figure description: {verified_caption}",
+    metadata={
+        "source": "data/report.pdf",
+        "element_type": "image",
+        "image_path": "output/images/picture_12.png",
+    },
+)</code></pre></div><p><b>Expected:</b> a LangChain Document whose text caption can be embedded and searched. The image path points to the original asset. Replace the illustrative caption with a verified description.</p><div class="callout warn">Picture export itself is a Docling Core operation in the uploaded cookbook. This code only shows the LangChain document created after the image has been exported and described.</div></div></details>
+   <details><summary>5. Scanned pages and OCR</summary><div class="detail-body"><p>A scanned page is an image, so OCR must recognize its text before it can be embedded as text. The source cookbook configures OCR through Docling's PDF pipeline and passes the configured converter to `DoclingLoader`.</p><p><b>LangChain output inspection:</b></p><div class="codebox"><div class="codehead">Python · consume OCR-enabled loader output <button class="copy" onclick="copyCode(this)">Copy code</button></div><pre><code># `ocr_loader` is a DoclingLoader configured with
+# an OCR-enabled converter in the document pipeline.
+# The converter setup is intentionally omitted here
+# because it uses Docling Core pipeline APIs.
+
+ocr_docs = ocr_loader.load()
+
+for doc in ocr_docs[:5]:
+    print(doc.page_content)
+    print(doc.metadata)</code></pre></div><p><b>Validate:</b> names, dates, decimal points, currency, table cells and low-resolution text. OCR is not guaranteed to be perfect.</p><div class="callout warn">The uploaded source's Tesseract configuration is Docling Core configuration, not a LangChain-only API. Use the source's official OCR reference for that configuration; do not assume the normal loader automatically OCRs every scan.</div></div></details>
+   <details><summary>6. Multi-column PDFs</summary><div class="detail-body"><p>Two-column research papers are difficult because naïve extraction can mix left and right columns. Docling performs layout analysis and reading-order reconstruction during conversion; LangChain receives the converted result.</p><div class="codebox"><div class="codehead">Python · LangChain DoclingLoader <button class="copy" onclick="copyCode(this)">Copy code</button></div><pre><code>from langchain_docling import DoclingLoader
+from langchain_docling.loader import ExportType
+
+doc = DoclingLoader(
+    file_path="data/two_column_research_paper.pdf",
+    export_type=ExportType.MARKDOWN,
+).load()[0]
+
+print(doc.page_content[:5000])</code></pre></div><p><b>Validate:</b> inspect pages containing figures, sidebars, footnotes or equations. Chunking cannot reliably fix reading order that was already wrong during extraction.</p></div></details>
+   <details><summary>7. Charts and figures</summary><div class="detail-body"><p>Chart title and axis labels may be extracted as text, but that does not prove the trend or numerical values were understood. The cookbook recommends exporting the chart image, then using a VLM or human review to produce a factual description.</p><p><b>LangChain representation:</b></p><div class="codebox"><div class="codehead">Python · chart description document <button class="copy" onclick="copyCode(this)">Copy code</button></div><pre><code>from langchain_core.documents import Document
+
+verified_chart_description = (
+    "Quarterly revenue: Q1 = 10 million, "
+    "Q2 = 12 million, Q3 = 15 million, Q4 = 18 million."
+)
+
+chart_doc = Document(
+    page_content=verified_chart_description,
+    metadata={
+        "source": "data/report.pdf",
+        "element_type": "chart_description",
+        "image_path": "output/charts/chart_3.png",
+    },
+)</code></pre></div><p><b>Validate:</b> values, units, axis ranges, series names, legend labels and reporting period. Example numbers above are illustrative only.</p></div></details>
+   <div class="card"><h3>Element validation checklist</h3><table><tr><th>Element</th><th>What to verify before indexing</th></tr><tr><td>Text</td><td>Missing symbols, paragraphs, bullets and footnotes</td></tr><tr><td>Headings</td><td>Correct hierarchy and section context</td></tr><tr><td>Tables</td><td>Rows, columns, merged cells, units and footnotes</td></tr><tr><td>Images</td><td>Caption matches the visual; asset reference retained</td></tr><tr><td>OCR</td><td>Names, dates, decimal points, currency and cells</td></tr><tr><td>Columns</td><td>Left/right reading order and placement of figures</td></tr><tr><td>Charts</td><td>Numbers, axes, units, series and trend</td></tr></table></div>
+  </section>
+
+  <section class="section" id="chunking">
+   <div class="section-head"><div><div class="kicker">Chapter 04 · Intermediate</div><h2>Chunking strategies & metadata</h2><p>Turn a large document into retrieval units without losing the meaning of each section.</p></div><button class="complete-btn" data-complete="chunking">Mark studied ✓</button></div>
+   <div class="card"><h3>What is chunking?</h3><p>Chunking divides extracted document content into smaller pieces that can be embedded and retrieved. The objective is not merely to make text shorter; it is to create useful, context-preserving retrieval units.</p><div class="story"><b>Story: medical knowledge assistant</b><p>A hospital protocol is 70 pages. If the whole PDF is one chunk, a question about medication storage retrieves a huge, unfocused unit. If every sentence is isolated, the answer may lose the protocol heading and surrounding conditions. A useful chunk balances focused matching with enough context.</p></div></div>
+   <div class="grid2"><div class="card"><h3>MARKDOWN + header splitter</h3><p>Load the full Markdown, then split at `#`, `##`, `###`. Heading values become metadata, helping a retrieved paragraph retain its section context.</p><span class="pill">Section-aware</span></div><div class="card"><h3>DOC_CHUNKS + HybridChunker</h3><p>DoclingLoader's document chunk export uses document-aware chunking; your guide names HybridChunker as the default. It is a practical starting point for RAG.</p><span class="pill green">Structure-aware</span></div></div>
+   <div class="card"><h3>Compare the approaches</h3><table><tr><th>Approach</th><th>Useful when</th><th>Watch out for</th></tr><tr><td>Whole Markdown</td><td>Inspecting conversion or custom processing</td><td>Do not embed a huge document as one vector</td></tr><tr><td>MarkdownHeaderTextSplitter</td><td>Sections and heading context matter</td><td>Heading recognition must be checked</td></tr><tr><td>DOC_CHUNKS / HybridChunker</td><td>Want document-aware chunking</td><td>Inspect actual chunk boundaries and metadata</td></tr></table></div>
+   <div class="card"><h3>Metadata: the identity card for a chunk</h3><p>Metadata carries provenance and context. Your source shows fields such as source file, page number and section. The cookbook also demonstrates explicit element type, table number and image path metadata.</p><div class="codebox"><div class="codehead">Python · inspect metadata <button class="copy" onclick="copyCode(this)">Copy code</button></div><pre><code>for index, doc in enumerate(chunks[:5], start=1):
+    print("CHUNK:", index)
+    print("CONTENT:", doc.page_content[:250])
+    print("METADATA:", doc.metadata)</code></pre></div><div class="callout good">Production lesson: keep source/page identifiers so a retrieved chunk can be traced to the original document. Metadata keys can vary by package version; inspect your actual output.</div></div>
+   <div class="card"><h3>Memory trick</h3><div class="story"><b>“Structure → Split → Label → Verify”</b><p>Understand the document structure, split it into useful chunks, label each chunk with metadata, and verify the output against the source.</p></div></div>
+  </section>
+
+  <section class="section" id="embeddings">
+   <div class="section-head"><div><div class="kicker">Chapter 05 · Intermediate</div><h2>Embeddings & Qdrant vector database</h2><p>Convert LangChain Documents into searchable vectors and retrieve relevant evidence.</p></div><button class="complete-btn" data-complete="embeddings">Mark studied ✓</button></div>
+   <div class="grid2"><div class="card"><h3>What is an embedding?</h3><p>An embedding model converts text into a numerical vector that represents semantic information. Similarity search compares a query vector with stored document vectors to find semantically related content.</p><h4>Why do we need it?</h4><p>Users rarely ask questions using exactly the same words as the source document. Vector representations can help retrieve conceptually related passages.</p></div><div class="card"><h3>What is Qdrant?</h3><p>Qdrant is the vector database used in your uploaded guide. It stores vectors together with associated payload/metadata and supports vector retrieval.</p><div class="callout">Keep the same embedding model/configuration consistent when creating document vectors and query vectors in a vector-search workflow.</div></div></div>
+   <div class="card"><h3>Step 1 — install the packages</h3><div class="codebox"><div class="codehead">Terminal <button class="copy" onclick="copyCode(this)">Copy code</button></div><pre><code>pip install langchain-huggingface
+pip install langchain-qdrant
+pip install qdrant-client
+pip install sentence-transformers</code></pre></div><h3>Step 2 — create embeddings</h3><div class="codebox"><div class="codehead">Python <button class="copy" onclick="copyCode(this)">Copy code</button></div><pre><code>from langchain_huggingface import HuggingFaceEmbeddings
+
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+)</code></pre></div><p>The model name is the example used in your source guide.</p></div>
+   <div class="card"><h3>Step 3 — start Qdrant and create the vector store</h3><div class="codebox"><div class="codehead">Terminal · start local Qdrant <button class="copy" onclick="copyCode(this)">Copy code</button></div><pre><code>docker run -p 6333:6333 qdrant/qdrant</code></pre></div><div class="codebox"><div class="codehead">Python · index LangChain Documents <button class="copy" onclick="copyCode(this)">Copy code</button></div><pre><code>from langchain_qdrant import QdrantVectorStore
+from qdrant_client import QdrantClient
+
+client = QdrantClient(url="http://localhost:6333")
+
+vectorstore = QdrantVectorStore.from_documents(
+    docs,
+    embeddings,
+    url="http://localhost:6333",
+    collection_name="docling_docs",
+)</code></pre></div><p><b>Inputs:</b> `docs` is the list of LangChain Documents, `embeddings` is the embedding model, and `collection_name` identifies the Qdrant collection.</p></div>
+   <div class="card"><h3>Step 4 — retrieve relevant documents</h3><div class="codebox"><div class="codehead">Python · retriever <button class="copy" onclick="copyCode(this)">Copy code</button></div><pre><code>retriever = vectorstore.as_retriever(
+    search_kwargs={"k": 5}
+)
+
+results = retriever.invoke(
+    "What is quarterly revenue?"
+)
+
+for result in results:
+    print(result.page_content)
+    print(result.metadata)</code></pre></div><p>`k=5` requests five results. Inspect both content and metadata to judge whether the retrieved evidence is useful.</p></div>
+   <div class="diagram"><pre>INDEX TIME
+LangChain Documents
+       │
+       ▼
+Embedding model ──► vectors
+       │                │
+       └────────────────┘
+                │
+                ▼
+       Qdrant collection
+       (vectors + payload)
+
+QUERY TIME
+User question
+       │
+       ▼
+Query embedding / vector search
+       │
+       ▼
+Relevant LangChain Documents
+       │
+       ▼
+LLM context</pre></div>
+   <div class="card"><h3>Common troubleshooting</h3><details><summary>Qdrant connection refused</summary><div class="detail-body">Confirm the Qdrant container is running and that the configured URL/port matches the local instance (`localhost:6333` in the source example).</div></details><details><summary>Unexpected metadata keys</summary><div class="detail-body">Print `doc.metadata` from your installed version. The source cookbook explicitly warns that metadata can differ across releases.</div></details><details><summary>Weak retrieval results</summary><div class="detail-body">Inspect extracted text, chunk boundaries, metadata and the actual top-k results. A vector database cannot repair missing or incorrectly extracted source content.</div></details></div>
+  </section>
+
+  <section class="section" id="retrieval">
+   <div class="section-head"><div><div class="kicker">Chapter 06 · Intermediate to advanced</div><h2>Retrieval fundamentals</h2><p>Understand the retrieval stage and distinguish source-backed concepts from topics requiring additional study material.</p></div><button class="complete-btn" data-complete="retrieval">Mark studied ✓</button></div>
+   <div class="card"><h3>What does a retriever do?</h3><p>A retriever accepts a query and returns relevant documents from the indexed knowledge base. In your Qdrant example, the vector store is exposed as a LangChain retriever.</p><div class="codebox"><div class="codehead">Python · basic retriever <button class="copy" onclick="copyCode(this)">Copy code</button></div><pre><code>retriever = vectorstore.as_retriever(
+    search_kwargs={"k": 5}
+)
+
+docs_found = retriever.invoke(
+    "What is quarterly revenue?"
+)
+
+for doc in docs_found:
+    print(doc.page_content)</code></pre></div></div>
+   <div class="grid3"><div class="card"><span class="pill">Dense</span><h3>Dense retrieval</h3><p>Uses embedding vectors to retrieve semantically related content. The uploaded guide demonstrates embeddings and Qdrant vector retrieval.</p></div><div class="card"><span class="pill amber">Sparse</span><h3>Sparse retrieval</h3><p>Typically refers to term-based retrieval. Your uploaded files do not explain or implement sparse retrieval.</p><span class="pill red">Source gap</span></div><div class="card"><span class="pill purple">Hybrid</span><h3>Hybrid retrieval</h3><p>Typically combines multiple retrieval signals. The uploaded files do not provide a hybrid retriever implementation or configuration.</p><span class="pill red">Source gap</span></div></div>
+   <div class="callout warn"><b>Do not confuse HybridChunker with hybrid retrieval.</b> HybridChunker is a document chunking component named in your guide. It is not evidence that the guide implements sparse+dense hybrid search.</div>
+   <div class="card"><h3>Retrieval quality checklist</h3><ul><li>Did the loader extract the correct source content?</li><li>Do chunks retain headings and table context?</li><li>Does metadata preserve source and page references?</li><li>Are the top-k retrieved passages relevant to the query?</li><li>Can you trace each retrieved passage back to its source?</li></ul></div>
+  </section>
+
+  <section class="section" id="advanced">
+   <div class="section-head"><div><div class="kicker">Chapter 07 · Advanced</div><h2>Advanced retrievers</h2><p>Learn the patterns requested for enterprise RAG, with explicit coverage labels based on your uploaded files.</p></div><button class="complete-btn" data-complete="advanced">Mark studied ✓</button></div>
+   <div class="card"><h3>Parent Document Retriever</h3><span class="pill green">Concept present in source</span><p>Your Qdrant guide describes the pattern as: match a small child chunk, then return the larger parent section. This balances precise matching with richer answer context.</p><div class="diagram"><pre>Large parent section
+       │
+       ├── Child chunk A
+       ├── Child chunk B  ◄── query matches this
+       └── Child chunk C
+                 │
+                 ▼
+       Return parent section
+       for broader context</pre></div><p><b>Use when:</b> small chunks help identify a precise match, but the answer needs the surrounding section.</p><div class="callout warn">Source gap: your uploaded guide provides the concept and flow, but not a complete runnable Parent Document Retriever setup. No unsupported API code is fabricated here.</div></div>
+   <div class="grid2"><div class="card"><h3>Multi-Query Retriever</h3><span class="pill red">Not covered in uploaded files</span><p>Requested topic. Your two uploaded source files do not explain the multi-query workflow or provide an implementation. Add the relevant course notes/source chapter to make this a source-grounded lesson.</p></div><div class="card"><h3>Self-Query Retriever</h3><span class="pill red">Not covered in uploaded files</span><p>Requested topic. The uploaded files do not explain query-to-metadata-filter translation or show a runnable LangChain configuration. This portal deliberately does not invent one.</p></div></div>
+   <div class="card"><h3>Retrievers: what your source actually supports</h3><table><tr><th>Topic</th><th>Source coverage</th><th>What is available</th></tr><tr><td>Qdrant vector retriever</td><td><span class="pill green">Code</span></td><td>`as_retriever(search_kwargs={"k": 5})` and `invoke()`</td></tr><tr><td>Parent Document Retriever</td><td><span class="pill amber">Concept</span></td><td>Child chunk match → parent section returned</td></tr><tr><td>Contextual Compression</td><td><span class="pill amber">Concept</span></td><td>Retriever → compression → important passages → LLM</td></tr><tr><td>Multi-Query</td><td><span class="pill red">Missing</span></td><td>No explanation/code in supplied files</td></tr><tr><td>Self-Query</td><td><span class="pill red">Missing</span></td><td>No explanation/code in supplied files</td></tr><tr><td>Sparse / hybrid</td><td><span class="pill red">Missing</span></td><td>No implementation in supplied files</td></tr></table></div>
+  </section>
+
+  <section class="section" id="reranking">
+   <div class="section-head"><div><div class="kicker">Chapter 08 · Advanced</div><h2>Reranking & contextual compression</h2><p>Improve the quality and focus of the context passed from retrieval to generation.</p></div><button class="complete-btn" data-complete="reranking">Mark studied ✓</button></div>
+   <div class="card"><h3>Contextual Compression Retriever</h3><span class="pill green">Concept present in source</span><p>Your source guide describes this as a way to reduce retrieved content to the important passages before the LLM receives it.</p><div class="diagram"><pre>User question
+     │
+     ▼
+Base retriever
+     │
+     ▼
+Retrieved documents
+     │
+     ▼
+Compression step
+     │
+     ▼
+Important passages
+     │
+     ▼
+LLM answer</pre></div><p><b>Benefits listed in your guide:</b> reduced tokens, better relevance and lower cost.</p><div class="callout warn">The uploaded guide imports `ContextualCompressionRetriever` but does not provide a complete runnable configuration. The diagram represents the source's conceptual flow.</div></div>
+   <div class="card"><h3>What is reranking?</h3><p>Your production architecture places a reranker after retrieval. At a high level, retrieval produces candidate passages and a reranking stage reorders candidates before later context processing.</p><div class="diagram"><pre>Question
+   │
+   ▼
+Vector retriever
+   │
+   ▼
+Candidate passages
+   │
+   ▼
+Reranker
+   │
+   ▼
+Reordered passages
+   │
+   ▼
+Compression / LLM</pre></div><div class="callout warn">Source gap: your files do not identify a reranking model, provide reranker code, or explain bi-encoder versus cross-encoder architecture. These details need a separate source before they can be taught as source-derived material.</div></div>
+   <div class="card"><h3>Important distinction</h3><table><tr><th>Component</th><th>Role</th></tr><tr><td>Qdrant</td><td>Stores vectors and associated data; supports vector search.</td></tr><tr><td>Retriever</td><td>Fetches candidate documents for a query.</td></tr><tr><td>Reranker</td><td>Reorders retrieved candidates in the pipeline.</td></tr><tr><td>Contextual compression</td><td>Reduces retrieved material to query-relevant passages.</td></tr></table></div>
+  </section>
+
+  <section class="section" id="architecture">
+   <div class="section-head"><div><div class="kicker">Chapter 09 · Enterprise design</div><h2>End-to-end enterprise RAG architecture</h2><p>Connect ingestion, indexing and query-time retrieval into one operating workflow.</p></div><button class="complete-btn" data-complete="architecture">Mark studied ✓</button></div>
+   <div class="card"><h3>Ingestion and indexing pipeline</h3><div class="diagram"><pre>                 DOCUMENT INGESTION
+PDF / DOCX / PPTX / HTML / TXT / images
+                 │
+                 ▼
+        LangChain DoclingLoader
+                 │
+                 ▼
+       Markdown or DOC_CHUNKS
+                 │
+                 ▼
+       Validate extracted content
+                 │
+       ┌─────────┼──────────┐
+       ▼         ▼          ▼
+     Text      Tables    Visuals
+       │         │          │
+       │         │     Verified caption
+       └─────────┴──────────┘
+                 │
+                 ▼
+       LangChain Document list
+       + source / page / type metadata
+                 │
+                 ▼
+            Embeddings
+                 │
+                 ▼
+             Qdrant</pre><div class="caption">Based on the uploaded guide. Image/chart captions require an additional VLM or human validation step.</div></div></div>
+   <div class="card"><h3>Query-time pipeline</h3><div class="diagram"><pre>                 USER QUESTION
+                       │
+                       ▼
+                 Qdrant retriever
+                       │
+                       ▼
+                Candidate chunks
+                       │
+              ┌────────┴────────┐
+              ▼                 ▼
+          Reranking        Compression
+              └────────┬────────┘
+                       ▼
+                Relevant context
+                       │
+                       ▼
+                    LLM
+                       │
+                       ▼
+          Grounded answer + source trace</pre><div class="caption">Reranking and compression are optional stages in the production architecture described by your source.</div></div></div>
+   <div class="grid2"><div class="card"><h3>Operational checks</h3><ul><li>Conversion quality and layout order</li><li>Chunk boundaries and token sizes</li><li>Metadata and source provenance</li><li>Duplicate content and OCR double indexing</li><li>Retrieval relevance and source traceability</li></ul></div><div class="card"><h3>Enterprise scenario</h3><div class="story"><b>Customer support assistant</b><p>Ingest product manuals, policy PDFs and troubleshooting guides. Use structured chunks and metadata to index them in Qdrant. At question time, retrieve relevant passages and provide them to the LLM. Keep the original document/page reference so support teams can verify the evidence.</p></div></div></div>
+   <div class="card"><h3>Production practices from your source</h3><ol><li>Start with `DOC_CHUNKS` and `HybridChunker`.</li><li>Preserve metadata and source references.</li><li>Monitor chunk sizes; the guide suggests 200–500 tokens as a practical range.</li><li>Add reranking where appropriate.</li><li>Consider contextual compression.</li><li>Deduplicate extracted content.</li><li>Convert once and reuse the conversion result when building text/table/image outputs.</li><li>Do not index OCR-derived content twice.</li></ol></div>
+  </section>
+
+  <section class="section" id="interview">
+   <div class="section-head"><div><div class="kicker">Chapter 10 · Interview preparation</div><h2>Interview questions & speaking practice</h2><p>Use the reveal controls to practise explaining concepts without reading the answer first.</p></div><button class="complete-btn" data-complete="interview">Mark studied ✓</button></div>
+   <div class="card"><h3>1–2 minute answer: explain your RAG ingestion pipeline</h3><div class="story"><p>“For enterprise RAG, I first load complex documents through LangChain's `DoclingLoader`. It uses document understanding internally and returns LangChain Documents. I use Markdown export when I need to inspect the complete converted structure, or `DOC_CHUNKS` as a document-aware chunking starting point. I validate headings, tables, reading order and OCR output, and preserve metadata such as source and page. Then I generate embeddings and index the documents in Qdrant. At query time, I retrieve relevant chunks and can add reranking or contextual compression before sending context to the LLM. I also preserve source references so the answer can be traced back to the original document.”</p></div></div>
+   <div class="card"><h3>Core interview questions</h3>
+    <div class="question"><b>1. Why use DoclingLoader instead of a basic PDF loader?</b><button class="reveal" onclick="reveal(this)">Reveal answer</button><div class="answer">Both can return LangChain Documents. DoclingLoader uses document understanding to better preserve structure such as headings, tables, layout and reading order, which can improve chunk quality and retrieval.</div></div>
+    <div class="question"><b>2. What is the difference between MARKDOWN and DOC_CHUNKS?</b><button class="reveal" onclick="reveal(this)">Reveal answer</button><div class="answer">MARKDOWN returns the converted document as Markdown for inspection or custom splitting. DOC_CHUNKS returns multiple document-aware chunks and is the recommended starting point for RAG in your guide.</div></div>
+    <div class="question"><b>3. Why preserve metadata?</b><button class="reveal" onclick="reveal(this)">Reveal answer</button><div class="answer">Metadata provides provenance and context such as source file, page and section. It helps trace retrieved evidence back to the original document.</div></div>
+    <div class="question"><b>4. How do you make tables searchable?</b><button class="reveal" onclick="reveal(this)">Reveal answer</button><div class="answer">Use Markdown table output when sufficient, retaining headers and row relationships. The cookbook also demonstrates extracting tables to DataFrames and wrapping their text in LangChain Documents, but that low-level extraction uses Docling Core.</div></div>
+    <div class="question"><b>5. How do you process scanned PDFs?</b><button class="reveal" onclick="reveal(this)">Reveal answer</button><div class="answer">A scanned page is an image, so OCR is needed to recognize text. The source configures an OCR-enabled Docling converter and passes it to DoclingLoader. Validate names, dates, decimal points, currency and table cells.</div></div>
+    <div class="question"><b>6. Why use Parent Document Retriever?</b><button class="reveal" onclick="reveal(this)">Reveal answer</button><div class="answer">The system matches a small child chunk for precision, then returns the larger parent section to provide surrounding context. Your source describes the concept, not a full implementation.</div></div>
+    <div class="question"><b>7. What does contextual compression do?</b><button class="reveal" onclick="reveal(this)">Reveal answer</button><div class="answer">It reduces retrieved material to important passages before the LLM uses it. Your guide lists fewer tokens, better relevance and lower cost as benefits.</div></div>
+    <div class="question"><b>8. Where does reranking fit?</b><button class="reveal" onclick="reveal(this)">Reveal answer</button><div class="answer">After initial retrieval, before final context is passed to the LLM. Your source includes reranking in the production architecture but does not specify a model or code.</div></div>
+    <div class="question"><b>9. How do you prevent duplicate ingestion?</b><button class="reveal" onclick="reveal(this)">Reveal answer</button><div class="answer">Convert a PDF once and reuse the conversion result, deduplicate content, and ensure OCR-derived content is indexed only once.</div></div>
+    <div class="question"><b>10. Why is a chart caption not automatically trustworthy?</b><button class="reveal" onclick="reveal(this)">Reveal answer</button><div class="answer">A caption can misread values, units, axes or trends. Use a VLM or human review and validate against the original chart.</div></div>
+   </div>
+   <div class="card"><h3>Scenario-based prompts</h3><details><summary>A finance PDF has a multi-page table. What do you validate?</summary><div class="detail-body">Check column headers, row alignment, merged cells, page continuity, units and footnotes. Compare important financial values against the original pages. Preserve source/page provenance.</div></details><details><summary>A research paper's retrieved answer mixes two columns. What do you investigate?</summary><div class="detail-body">Inspect the original page and Docling conversion reading order. Do not assume chunking will repair a layout extraction problem.</div></details><details><summary>Users ask about trends in charts but vector search cannot answer.</summary><div class="detail-body">The chart may be represented as an image rather than meaningful text. Export the visual, create a verified description with a VLM or human review, and index that description as a LangChain Document with a source reference.</div></details></div>
+  </section>
+
+  <section class="section" id="quiz">
+   <div class="section-head"><div><div class="kicker">Chapter 11 · Interactive practice</div><h2>Knowledge check</h2><p>Choose an answer. Feedback appears immediately; questions are based on concepts in the uploaded guides.</p></div><button class="complete-btn" data-complete="quiz">Mark studied ✓</button></div>
+   <div id="quizContainer" class="card"></div>
+  </section>
+
+  <section class="section" id="revision">
+   <div class="section-head"><div><div class="kicker">Chapter 12 · Revision</div><h2>Quick revision & hands-on plan</h2><p>Turn the study portal into a repeatable practice routine.</p></div><button class="complete-btn" data-complete="revision">Mark studied ✓</button></div>
+   <div class="grid2"><div class="card"><h3>Memory techniques</h3><div class="story"><b>Docling RAG sequence</b><p>Load → Structure → Chunk → Embed → Store → Retrieve → Refine → Answer.</p></div><div class="story"><b>PDF element checks</b><p>Text = accuracy · Heading = hierarchy · Table = relationships · Image = caption · OCR = recognition · Columns = reading order · Chart = values and axes.</p></div><div class="story"><b>Chunking</b><p>Structure → Split → Label → Verify.</p></div></div><div class="card"><h3>One-page revision</h3><ul><li>`DoclingLoader` returns LangChain Documents.</li><li>`MARKDOWN` is useful for inspecting the converted document.</li><li>`DOC_CHUNKS` is a useful RAG starting point.</li><li>`HybridChunker` is document-aware.</li><li>Metadata supports provenance and traceability.</li><li>Embeddings convert text into vectors.</li><li>Qdrant stores vectors and supports retrieval.</li><li>Parent retriever returns a larger parent after child matching.</li><li>Compression reduces retrieved content.</li><li>Reranking is a later retrieval refinement stage.</li></ul></div></div>
+   <div class="card"><h3>Hands-on checklist</h3><div class="checklist" id="practiceList">
+    <label><input type="checkbox"> Install `langchain-docling` and supporting packages.</label>
+    <label><input type="checkbox"> Load a PDF using `MARKDOWN` and inspect its content.</label>
+    <label><input type="checkbox"> Load the same PDF using `DOC_CHUNKS`.</label>
+    <label><input type="checkbox"> Print and inspect chunk metadata.</label>
+    <label><input type="checkbox"> Split Markdown by heading hierarchy.</label>
+    <label><input type="checkbox"> Inspect Markdown tables and validate their rows.</label>
+    <label><input type="checkbox"> Review a scanned PDF OCR output against its page image.</label>
+    <label><input type="checkbox"> Validate reading order in a two-column paper.</label>
+    <label><input type="checkbox"> Create a verified caption Document for an image or chart.</label>
+    <label><input type="checkbox"> Generate embeddings and index LangChain Documents in Qdrant.</label>
+    <label><input type="checkbox"> Retrieve top five chunks and inspect relevance.</label>
+    <label><input type="checkbox"> Explain the full pipeline aloud in 90 seconds.</label>
+   </div></div>
+   <div class="card"><h3>Source coverage map</h3><table><tr><th>Requested area</th><th>Coverage in uploaded files</th></tr><tr><td>DoclingLoader, export types, LangChain Documents</td><td><span class="pill green">Detailed</span></td></tr><tr><td>Text, headings, tables, images, OCR, columns, charts</td><td><span class="pill green">Cookbook examples</span></td></tr><tr><td>HybridChunker, embeddings, Qdrant, basic retriever</td><td><span class="pill green">Code + concepts</span></td></tr><tr><td>Parent Document, Contextual Compression, reranking</td><td><span class="pill amber">Concept-level</span></td></tr><tr><td>Multi-Query, Self-Query, sparse/hybrid search</td><td><span class="pill red">Not in source</span></td></tr><tr><td>Bi-encoder vs cross-encoder, reranker implementation</td><td><span class="pill red">Not in source</span></td></tr></table></div>
+  </section>
+  <div class="footer">Built from the uploaded “Docling + LangChain + Qdrant Complete Guide” and “Hands-on Cookbook: LangChain + Docling for Each PDF Element”. Source-grounded learning portal; verify package versions and official docs when APIs change.</div>
+ </div>
+</main>
+</div>
+<script>
+const sections=[...document.querySelectorAll('.section')];
+const nav=[...document.querySelectorAll('.nav-item')];
+const names={overview:'OVERVIEW',foundations:'RAG FOUNDATIONS',loader:'DOCLINGLOADER',elements:'PDF ELEMENTS',chunking:'CHUNKING',embeddings:'EMBEDDINGS & QDRANT',retrieval:'RETRIEVAL',advanced:'ADVANCED RETRIEVERS',reranking:'RERANKING',architecture:'ENTERPRISE ARCHITECTURE',interview:'INTERVIEW PREP',quiz:'KNOWLEDGE CHECK',revision:'REVISION'};
+let completed=new Set();
+function go(id){sections.forEach(s=>s.classList.toggle('active',s.id===id));nav.forEach(n=>n.classList.toggle('active',n.dataset.target===id));document.getElementById('crumbName').textContent=names[id]||id.toUpperCase();document.getElementById('sidebar').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'});}
+nav.forEach(n=>n.addEventListener('click',()=>go(n.dataset.target)));
+document.getElementById('menuBtn').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
+function updateProgress(){let p=Math.round(completed.size/12*100);document.getElementById('progressText').textContent=p+'%';document.getElementById('statProgress').textContent=p+'%';document.querySelectorAll('[data-complete]').forEach(b=>{let done=completed.has(b.dataset.complete);b.classList.toggle('done',done);b.textContent=done?'Completed ✓':'Mark studied ✓';});}
+document.querySelectorAll('[data-complete]').forEach(b=>b.addEventListener('click',()=>{let id=b.dataset.complete;completed.has(id)?completed.delete(id):completed.add(id);updateProgress();}));
+function reveal(btn){btn.nextElementSibling.classList.toggle('show');btn.textContent=btn.nextElementSibling.classList.contains('show')?'Hide answer':'Reveal answer';}
+function copyCode(btn){let code=btn.closest('.codebox').querySelector('code').innerText;navigator.clipboard?.writeText(code).then(()=>{btn.textContent='Copied ✓';setTimeout(()=>btn.textContent='Copy code',1300)}).catch(()=>{btn.textContent='Select code to copy';});}
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{let card=t.closest('.card,section')||document;let group=t.parentElement;group.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===t));let parent=group.parentElement;parent.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('active',p.id===t.dataset.tab));}));
+const searchItems=[
+['RAG foundations','foundations','Why document ingestion quality matters'],
+['DoclingLoader','loader','LangChain document loading and export types'],
+['MARKDOWN','loader','ExportType.MARKDOWN'],
+['DOC_CHUNKS','loader','ExportType.DOC_CHUNKS and document-aware chunks'],
+['PDF text extraction','elements','Text extraction with LangChain DoclingLoader'],
+['Headings','elements','MarkdownHeaderTextSplitter'],
+['Tables','elements','Markdown tables and LangChain Documents'],
+['Images and diagrams','elements','Verified captions and image Documents'],
+['OCR','elements','Scanned PDFs and OCR output'],
+['Multi-column PDFs','elements','Reading order and layout validation'],
+['Charts','elements','Chart descriptions and visual validation'],
+['HybridChunker','chunking','Structure-aware chunking'],
+['Metadata','chunking','Source, page, section and element type'],
+['Embeddings','embeddings','Hugging Face embeddings'],
+['Qdrant','embeddings','Vector database and collection'],
+['Retriever','retrieval','Top-k vector retrieval'],
+['Sparse retrieval','retrieval','Source gap: not explained in uploaded files'],
+['Hybrid retrieval','retrieval','Source gap: not implemented in uploaded files'],
+['Parent Document Retriever','advanced','Child chunk match returns parent section'],
+['Multi-Query Retriever','advanced','Not covered in uploaded files'],
+['Self-Query Retriever','advanced','Not covered in uploaded files'],
+['Contextual Compression','reranking','Reduce retrieved passages'],
+['Reranking','reranking','Candidate passage reordering'],
+['Enterprise architecture','architecture','Ingestion and query-time pipelines'],
+['Interview questions','interview','Interview-ready explanations'],
+['Quiz','quiz','Test your knowledge'],
+['Revision checklist','revision','Hands-on practice checklist']
+];
+const si=document.getElementById('searchInput'),sr=document.getElementById('searchResults');
+si.addEventListener('input',()=>{let q=si.value.trim().toLowerCase();if(!q){sr.style.display='none';return;}let hits=searchItems.filter(x=>(x[0]+' '+x[2]).toLowerCase().includes(q)).slice(0,9);sr.innerHTML=hits.map(x=>`<button class="result" data-go="${x[1]}">${x[0]}<small>${x[2]}</small></button>`).join('')||'<div class="result">No matching topic found</div>';sr.style.display='block';sr.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{go(b.dataset.go);sr.style.display='none';si.value='';}));});
+document.addEventListener('click',e=>{if(!e.target.closest('.search'))sr.style.display='none';});
+const questions=[
+{q:'Which export type returns the converted document as Markdown?',o:['DOC_CHUNKS','MARKDOWN','VECTOR_STORE'],a:1,e:'MARKDOWN returns the converted input as a Markdown representation.'},
+{q:'Which export type is the recommended RAG starting point in the uploaded guide?',o:['DOC_CHUNKS','CSV_EXPORT','IMAGE_ONLY'],a:0,e:'DOC_CHUNKS returns multiple document-aware LangChain Documents.'},
+{q:'What does DoclingLoader.load() return?',o:['A Qdrant client','A list of LangChain Documents','Only image files'],a:1,e:'The LangChain integration returns LangChain Document objects.'},
+{q:'Why preserve table headers with values?',o:['To increase file size','To retain what each value means','To remove metadata'],a:1,e:'Headers and row relationships preserve table context.'},
+{q:'What is needed to make scanned-page text searchable?',o:['OCR','Reranking','Qdrant payload only'],a:0,e:'OCR recognizes text from scanned page images.'},
+{q:'What is HybridChunker used for?',o:['Vector database hosting','Document-aware chunking','LLM generation'],a:1,e:'It creates chunks with awareness of document structure.'},
+{q:'What does Qdrant do in the example architecture?',o:['OCR the PDF','Store vectors and support retrieval','Generate captions'],a:1,e:'Qdrant is the vector database in the source guide.'},
+{q:'What does Parent Document Retriever return after matching a child chunk?',o:['The whole vector database','The larger parent section','Only a query embedding'],a:1,e:'The pattern returns the parent section for broader context.'},
+{q:'What is the purpose of contextual compression?',o:['Increase chunk duplication','Reduce retrieved content to important passages','Convert PDF to DOCX'],a:1,e:'The guide lists reduced tokens, better relevance and lower cost.'},
+{q:'Which statement about images is accurate?',o:['All images become searchable text automatically','A verified caption may be needed for text retrieval','Images should always be discarded'],a:1,e:'The cookbook recommends exporting visuals and adding verified VLM/human descriptions.'}
+];
+let qi=0,score=0,answered=new Set();
+function renderQuiz(){let q=questions[qi];let html=`<div class="kicker">Question ${qi+1} of ${questions.length}</div><h3 style="font-size:17px;margin:8px 0 14px">${q.q}</h3>${q.o.map((x,i)=>`<button class="quiz-option" data-opt="${i}">${String.fromCharCode(65+i)}. ${x}</button>`).join('')}<div class="quiz-feedback" id="quizFeedback"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><small class="muted">Score: ${score} / ${answered.size}</small><button class="complete-btn" id="nextQ" disabled>${qi===questions.length-1?'Restart quiz':'Next question →'}</button></div>`;document.getElementById('quizContainer').innerHTML=html;document.querySelectorAll('[data-opt]').forEach(b=>b.addEventListener('click',()=>{if(answered.has(qi))return;let val=Number(b.dataset.opt);answered.add(qi);let correct=val===q.a;if(correct)score++;document.querySelectorAll('[data-opt]').forEach(x=>{x.disabled=true;if(Number(x.dataset.opt)===q.a)x.classList.add('correct');else if(Number(x.dataset.opt)===val)x.classList.add('wrong');});document.getElementById('quizFeedback').textContent=(correct?'Correct. ':'Not quite. ')+q.e;document.getElementById('nextQ').disabled=false;document.querySelector('#quizContainer small').textContent=`Score: ${score} / ${answered.size}`;}));document.getElementById('nextQ').addEventListener('click',()=>{if(qi===questions.length-1){qi=0;score=0;answered.clear();}else qi++;renderQuiz();});}
+renderQuiz();updateProgress();
+</script>
+</body>
+</html>
